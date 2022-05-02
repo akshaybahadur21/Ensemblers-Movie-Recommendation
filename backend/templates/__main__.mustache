@@ -1,0 +1,41 @@
+import connexion
+import os
+from ensemblers_web.impl.config import ProductionConfig, DevelopmentConfig
+from {{packageName}} import encoder
+
+# Custom Middleware for CORS headers
+# reference: https://github.com/zalando/connexion/issues/357
+class CorsHeaderMiddleware(object):
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        def custom_start_response(status, headers, exc_info=None):
+            headers.append(('Access-Control-Allow-Origin', '*'))
+            return start_response(status, headers, exc_info)
+
+        return self.app(environ, custom_start_response)
+
+def main():
+    app = connexion.App(__name__, specification_dir='./swagger/')
+    app.app.json_encoder = encoder.JSONEncoder
+    app.add_api('swagger.yaml', arguments={'title': '{{appName}}'},
+                    pythonic_params=True, validate_responses=True)
+    app.app.wsgi_app = CorsHeaderMiddleware(app.app.wsgi_app)
+   
+    if os.getenv('FLASK_ENV') == 'production':
+        app.app.config.from_object(ProductionConfig())
+    else:
+        app.app.config.from_object(DevelopmentConfig())
+    
+    @app.route('/api/info')
+    def info():
+        return {
+            'env': os.getenv('FLASK_ENV')
+        }    
+    
+    app.run(port={{serverPort}})
+
+
+if __name__ == '__main__':
+    main()

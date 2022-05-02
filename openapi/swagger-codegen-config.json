@@ -1,0 +1,5 @@
+{
+  "packageName": "ensemblers_web",
+  "serverPort": 8082,
+  "modelPropertyNaming": "original"
+}

@@ -1,0 +1,178 @@
+openapi: "3.0.0"
+info:
+  title: "Ensemblers"
+  description: "Backend APIs for Ensemblers"
+  version: "0.1.0"
+  termsOfService: ""
+  contact:
+    email: "example@gmail.com"
+  license:
+    name: "TBA"
+    url: "TBA"
+
+# The servers block has a bug: https://github.com/spec-first/connexion/issues/1139
+# But it doesn't affect executing requests via the ui page in /ui .
+# Without the servers block it still defaults to the local server.
+#servers:
+#  - url: http://17645-team22.isri.cmu.edu:8082
+#    description: Optional server description, e.g. Main (production) server
+#  - url: http://localhost:8082
+#    description: Local server
+
+paths:
+  /recommend/{user_id}:
+    get:
+      summary: Returns an ordered comma separated list of up to 20 movie IDs in a single line.
+      description: Returns an ordered comma separated list of up to 20 movie IDs in a single line.
+
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+          required: true
+          example: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "1,2,3,4,5"
+
+  /recommend:
+    post:
+      summary: Inserts multiple records of user-recommendation into the DB.
+      description: Inserts multiple records of user-recommendation into the DB.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRecommendationUpload'
+
+      responses:
+        "200":
+          description: OK
+     
+  /telemetry_recommend:
+    post:
+      summary: Returns the telemetry data specified by the request body
+      description: Returns the telemetry data specified by the request body. The only accepted filter key is user_id. The returned data is sorted by descending time (latest to oldest).
+      
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetryRecommendRequest'
+      
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryRecommendReturn'
+  
+  /online_evaluation:
+    post:
+      summary: Uploads one or multiple records of online evaluation(s)
+      description: Uploads one or multiple records of online evaluation(s)
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnlineEvaluationUpload'
+
+      responses:
+        "200":
+          description: OK
+
+components:
+  schemas:
+    UserRecommendationUpload:
+      type: object
+      required:
+       - user_recommendations
+       - api_key
+      properties:
+        user_recommendations:
+          type: array
+          items:
+            type: object
+            required:
+              - user_id
+              - recommend
+            properties:
+              user_id:
+                type: string
+                example: "1"
+              recommend:
+                type: string
+                example: "1,2,3,4,5"
+              model_id:
+                type: integer
+                example: 1
+              
+
+        api_key:
+          type: string
+          example: ""
+
+    OnlineEvaluationUpload:
+      type: object
+      required:
+       - online_evaluations
+       - api_key
+      properties:
+        online_evaluations:
+          type: array
+          items:
+            type: object
+            required:
+              - model_id
+              - evaluation
+            properties:
+              model_id:
+                type: integer
+                example: 1
+              evaluation: 
+                type: object
+
+        api_key:
+          type: string
+          example: ""
+    
+    TelemetryRecommendRequest:
+      type: object
+      required:
+       - filter
+       - limit
+       - api_key
+      properties:
+        filter:
+          type: object
+          properties:
+            user_id:
+              type: string
+        limit:
+          type: integer
+          example: 10
+        api_key:
+          type: string
+          example: ""
+          
+    TelemetryRecommendReturn:
+      type: object
+      required:
+       - telemetry_data
+      properties:
+        telemetry_data:
+          type: array
+          items:
+            type: object
+      
+
+  # TODO: PUT, DELETE
